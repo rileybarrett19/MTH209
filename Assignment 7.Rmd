@@ -1,0 +1,226 @@
+---
+title: "Assignment 7"
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: columns
+    vertical_layout: fill
+    source_code: embed
+---
+
+
+
+```{r setup, include=FALSE, embed=TRUE}
+library(flexdashboard)
+library(tidyverse)
+insurance <- read_csv("insurance.csv")
+```
+
+Overview
+===
+
+Column {data-width=500}
+---
+
+In this assignment, we look at a sample set of clients of an insurance company. By looking at factors like age, children, and if they are a smoker, we see how their payments can be affected. What we end up finding is that smoking drastically increases the charges for a given customer. Additionally, age increases payments slightly over time. 
+
+
+Column {data-width=500}
+---
+
+2. Get a glimpse of the data and indicate the number of observations and the number of variables in the data.
+```{r}
+glimpse(insurance)
+attach(insurance)
+```
+There are 7 variables and 1,338 observations.
+
+Region
+===
+
+Column {data-width=500}
+---
+
+3. Create a bar plot of region. Use a few sentences to summarize your finding based on the plot.
+```{r}
+ggplot(insurance, aes(x = region)) +
+  geom_bar()
+```
+
+While this insurance has coverage all across the country, the plurality of the covered clients are in the southeast region.
+
+Column {data-width=500}
+---
+
+4. Create a stack bar plot such that region is on the x axis and each bar shows the distribution of smoker in that region. You should make sure that your y axis shows percents.
+```{r}
+smoker_distribution <- insurance %>%
+  group_by(region, smoker) %>%
+  summarise(count = n()) %>%
+  group_by(region) %>%
+  mutate(percent = count / sum(count) * 100)
+
+ggplot(smoker_distribution, aes(x = region, y = percent, fill = smoker)) +
+  geom_bar(stat = "identity", position = "stack") +
+  labs(title = "Percentage of Smokers in Each Region",
+       x = "Region",
+       y = "Percentage of Smokers") +
+  scale_fill_manual(values = c("yes" = "navy", "no" = "skyblue"))
+```
+
+BMI
+===
+
+Column {data-width=500}
+---
+
+## Histogram of BMI
+
+5. Create a histogram of bmi. Discuss the distribution of the histogram.
+```{r}
+ggplot(insurance, aes(x = bmi))+
+  geom_histogram()
+```
+
+The distribution shows that most of the clients fall within the 20 - 40 range for bmi, with a few outliers.
+
+Column {data-width=500}
+---
+
+## Histogram of Charges
+
+6. Create a histogram of charges, Discuss the distribution of the histogram.
+```{r}
+summary(charges)
+ggplot(insurance, aes(x = charges)) + 
+  geom_histogram()
+```
+
+This histogram shows that most of the clients charges are below 20000 and many of those are below 10000. 
+
+## BMI based on Region
+
+7. Create a boxplot that shows the distribution of bmi based on the region. Discuss what you find based on the boxplot. (Hint: you need to have x and y variables in mapping)
+```{r}
+ggplot(insurance, aes(x = region, y = bmi, fill = region)) +
+  geom_boxplot() +
+  labs(title = "Distribution of BMI According to Region",
+       x = "Region",
+       y = "BMI")
+```
+
+What we can see by this boxplot is that the highest average bmi comes from the southeast region. The other regions all have reasonably similar distributions of bmi.
+
+Age and Charges
+===
+
+Column {data-width=1000}
+---
+
+8. Create a scatterplot that shows the relationship between age (independent variable) and charges (dependent variable). Comment on the scatterplot.
+```{r}
+ggplot(insurance, aes(x = age, y = charges)) +
+  geom_point() +
+  labs(title = "Relationship between Age and Charges",
+       x = "Age",
+       y = "Charges")
+```
+
+The scatterplot shows a moderate positive relationship between age and charges. For each age, the majority of clients are on the lower end of the charge range.
+
+Charges and Smoking
+===
+
+Column {data-width=500}
+---
+
+9. You should find that it seems "charges" could be classified into several groups. Let's create a scatterplot that has age as the independent variable (x) and has smoker as another categorical variable (color), and the response variable is charges. Comment on the scatterplot.
+```{r}
+ggplot(insurance, aes(x = age, y = charges, color = smoker)) +
+  geom_point() +
+  labs(title = "Relationship between Age, Charges, and Smoker Status",
+       x = "Age",
+       y = "Charges",
+       color = "Smoker Status")
+```
+
+This plot shows that smokers have higher charges for their age group and that no one in the lowest charge range is a smoker.
+
+Column {data-width=500}
+---
+
+10. Now, create two data frames by subsetting insurance data as follows.
+smoker <- insurance[insurance$smoker=="yes"]
+nonsmoker <- insurance[insurance$smoker=="no"]
+```{r}
+smoker <- insurance %>%
+  filter(smoker == "yes")
+
+nonsmoker <- insurance %>%
+  filter(smoker == "no")
+```
+
+Column {data-width=500}
+---
+
+11. Create a scatterplot that has age as the independent variable (x) and the response variable is charges using the data frame smoker. Then add the smooth line. Comment on the plot. Does it make sense to use the smooth line to summarize the relationship between age of clients and the corresponding charges? Why?
+```{r}
+ggplot(smoker, aes(x = age, y = charges)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE) +
+  labs(title = "Relationship between Age and Charges for Smokers",
+       x = "Age",
+       y = "Charges")
+```
+
+I don't think it makes sense to use a straight line to represent this data. Since very little of the data actually falls on that line, it doesn't exactly match the data. However, it shows the positive correlation between the variables.
+
+Column {data-width=500}
+---
+
+12. Repeat Question 11 using the data frame nonsmoker.
+```{r}
+ggplot(nonsmoker, aes(x = age, y = charges)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE) +
+  labs(title = "Relationship between Age and Charges for Smokers",
+       x = "Age",
+       y = "Charges")
+```
+
+This time, the single straight line more accurately describes the data.
+
+Children vs. No Children
+===
+
+Column {data-width=500}
+---
+
+13. Based on the finding you have on Questions 11 & 12, propose what you might do next if you want to model charges using other variables in this data.
+
+I would want to see similar data with charges based on no children vs. children or based on region and bmi.
+
+14. Create a pie chart of children. Use a few sentences to summarize your finding based on the plot. (Hint: You need to convert the variable to a categorical variable first)
+```{r}
+insurance_children <- insurance %>%
+  mutate(children_grouped = case_when(
+    children == 0 ~ "No Children",
+    children > 0 ~ "Children"
+  ))
+ggplot(insurance_children, aes(x = "", fill = children_grouped)) + 
+  geom_bar(width = 1, color = "white") +
+  coord_polar("y", start = 0)
+
+```
+
+Column {data-width=500}
+---
+
+15. Create a boxplot that shows the distribution of charges based on the number of children. Discuss what you find based on the boxplot.
+```{r}
+ggplot(insurance, aes(x = children, y = charges)) +
+  geom_boxplot() +
+  labs(title = "Distribution of Charges Based on Number of Children",
+       x = "Number of Children",
+       y = "Charges")
+```
+
